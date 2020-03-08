@@ -40,7 +40,7 @@ container {
 }
 
 .is-trtl-green {
-  background-color: #00853d !important;
+  background-color: #ddce63 !important;
   color: #fff !important;
 }
 
@@ -142,14 +142,14 @@ container {
 }
 
 a {
-  color: #00853d;
+  color: #9b8125;
 }
 
 .navbar-link.is-active,
 .navbar-link:hover,
 a.navbar-item.is-active,
 a.navbar-item:hover {
-  color: #00853d !important;
+  color: #bba03c !important;
 }
 
 .trtl-amount,
