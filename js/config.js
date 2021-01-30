@@ -1,5 +1,5 @@
 const ExplorerConfig = {
-  apiBaseUrl: 'https://publicnode.ydns.eu/api4',
+  apiBaseUrl: 'https://api.derogold4ever.online/api4',
   ticker: 'DEGO',
   maxSupply: 10000000000000000,
   emissionSpeed: 24,
@@ -18,5 +18,6 @@ const ExplorerConfig = {
     2361823,
     2370000,
     2400000,
+    2500000
   ]
 }
