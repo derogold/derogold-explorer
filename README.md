@@ -1,19 +1,18 @@
-# TurtleCoin® Blockchain Explorer
-TurtleCoin® Blockchain Explorer v2020 - Live site: [l33d4n.github.io/trtl-explorer/](https://l33d4n.github.io/trtl-explorer/)
+# DeroGold Blockchain Explorer
+DeroGold Blockchain Explorer v3 - Live site: [explorer.derogold.online](https://explorer.derogold.online/)
 
-![screely-1597473876236](https://user-images.githubusercontent.com/8020386/90307103-efd89300-df05-11ea-87f9-cd511b862613.png)
-
-### Contributing to TurtleCoin® Blockchain Explorer
+### Contributing to DeroGold Blockchain Explorer
 
 We are a community of people across the world giving our time to make this software better. There are many ways you can help or join us:
 
--   If you'd like to report a bug or have an idea for an improvement, [open an issue](https://github.com/l33d4n/trtl-explorer/issues/new).
--   If you'd like to submit code for a bug you fixed, [submit a pull-request](https://github.com/l33d4n/trtl-explorer/compare).
+-   If you'd like to report a bug or have an idea for an improvement, [open an issue](https://github.com/derogold/derogold-explorer/issues/new).
+-   If you'd like to submit code for a bug you fixed, [submit a pull-request](https://github.com/derogold/derogold-explorer/compare).
 -   **Everyone else just click the ★ star at the top of this repository 😊 It really helps us out!**
 
-For anyone else wishing to help the community or who needs answers to questions not covered in this document, join us in our [Discord Chat](http://chat.turtlecoin.lol) here.
+For anyone else wishing to help the community or who needs answers to questions not covered in this document, join us in our [Discord Chat](https://discord.com/invite/j2aSNFn) here.
 
 ### Credits
-- TurtleCoin - [https://github.com/turtlecoin](https://github.com/turtlecoin)
-- TurtlePay - [https://github.com/TurtlePay](https://github.com/TurtlePay)
+- TurtleCoin Developers
+- TurtlePay Developers 
 - Tabler - [https://github.com/tabler/tabler](https://github.com/tabler/tabler)
+- L33d4n - [https://github.com/l33d4n/trtl-explorer](https://github.com/l33d4n/trtl-explorer)
