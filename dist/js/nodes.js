@@ -79,12 +79,12 @@ function getAndDrawNodeStats () {
     cache: 'false',
     success: function (data) {
       localData.nodeTable.clear()
-      for (var i = 0; i < data.length; i++) {
+      for (var i = 0; i < Math.min(data.length, 20); i++) {
         var node = data[i]
         var hist = []
 
         if (node.history) {
-          for (var j = 0; j < node.history.length; j++) {
+          for (var j = 0; j < Math.min(node.history.length, 10); j++) {
             var evt = node.history[j]
             if (evt.online) {
               hist.unshift('<i class="fas fa-circle has-trtl-green"></i>')
