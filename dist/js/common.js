@@ -244,7 +244,7 @@ function getQueryStringParam (key) {
   for (var i = 0; i < params.length; i++) {
     var param = params[i].split('=')
     if (param[0] === key) {
-      return param[1]
+      return decodeURIComponent(param[1])
     }
   }
 }

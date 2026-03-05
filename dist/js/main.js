@@ -187,6 +187,8 @@ function getAndDisplayLastBlockHeader() {
         $('#blockchainTotalSupply').text(numeral(ExplorerConfig.maxSupply / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
         var emiss = (coins / ExplorerConfig.maxSupply) * 100
         $('#blockchainSupplyEmission').text(numeral(emiss).format('0.000000') + ' %')
+      }, function () {
+        /* f_block_json failed — values will refresh on the next 15s poll */
       })
 
       displayForkCountdown(header.height)
