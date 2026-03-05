@@ -171,22 +171,22 @@ function updateCharts() {
         }
 
         const difficultyChartData = google.visualization.arrayToDataTable(difficultyData)
-        const difficultyChartOptions = blockchainChartOptions
+        const difficultyChartOptions = Object.assign({}, blockchainChartOptions)
         difficultyChartOptions.colors = ['#f6b26b','#40c18e']
         difficultyChart.draw(difficultyChartData, difficultyChartOptions)
 
         const blockSizeChartData = google.visualization.arrayToDataTable(blockSizeData)
-        const blockSizeChartOptions = blockchainChartOptions
+        const blockSizeChartOptions = Object.assign({}, blockchainChartOptions)
         blockSizeChartOptions.colors = ['#8e7cc3']
         blockSizeChart.draw(blockSizeChartData, blockSizeChartOptions)
 
         const txnChartData = google.visualization.arrayToDataTable(txnData)
-        const txnChartOptions = blockchainChartOptions
+        const txnChartOptions = Object.assign({}, blockchainChartOptions)
         txnChartOptions.colors = ['#00853d']
         txnChart.draw(txnChartData, txnChartOptions)
 
         const nonceChartData = google.visualization.arrayToDataTable(nonceData)
-        const nonceChartOptions = blockchainChartOptions
+        const nonceChartOptions = Object.assign({}, blockchainChartOptions)
         nonceChartOptions.colors = ['#212721']
         nonceChart.draw(nonceChartData, nonceChartOptions)
       }

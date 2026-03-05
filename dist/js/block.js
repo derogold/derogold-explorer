@@ -15,10 +15,10 @@ $(document).ready(function () {
       $('#blockVersion').text(block.major_version + '.' + block.minor_version)
       $('#blockDifficulty').text(numeral(block.difficulty).format('0,0'))
       $('#blockSize').text(numeral(block.blockSize).format('0,0') + ' bytes')
-      $('#blockBaseReward').text(numeral(block.baseReward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
-      $('#blockReward').text(numeral(block.reward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+      $('#blockBaseReward').text(numeral(block.baseReward / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+      $('#blockReward').text(numeral(block.reward / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
       $('#blockTransactionSize').text(numeral(block.transactionsCumulativeSize).format('0,0') + ' bytes')
-      $('#blockTransactionFees').text(numeral(block.totalFeeAmount / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+      $('#blockTransactionFees').text(numeral(block.totalFeeAmount / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
       $('#blockNonce').text(numeral(block.nonce).format('0,0'))
       $('#previousBlockHash').html('<a href="./block.html?hash=' + block.prev_hash + '">' + block.prev_hash + '</a>')
       $('#transactionCount').text(block.transactions.length)
@@ -57,8 +57,8 @@ $(document).ready(function () {
         var txn = block.transactions[i]
         transactions.row.add([
           txn.hash,
-          numeral(txn.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
-          numeral(txn.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
+          numeral(txn.fee / DECIMAL_MULTIPLIER).format('0,0.00'),
+          numeral(txn.amount_out / DECIMAL_MULTIPLIER).format('0,0.00'),
           numeral(txn.size).format('0,0')
         ])
       }
@@ -71,7 +71,7 @@ $(document).ready(function () {
       url: ExplorerConfig.apiBaseUrl + '/block/' + hash,
       dataType: 'json',
       type: 'GET',
-      cache: 'false',
+      cache: false,
       success: function (block) {
         $('#blockHeaderHash').text(block.hash)
         $('#blockHeight').text(numeral(block.height).format('0,0'))
@@ -80,10 +80,10 @@ $(document).ready(function () {
         $('#blockVersion').text(block.majorVersion + '.' + block.minorVersion)
         $('#blockDifficulty').text(numeral(block.difficulty).format('0,0'))
         $('#blockSize').text(numeral(block.size).format('0,0') + ' bytes')
-        $('#blockBaseReward').text(numeral(block.baseReward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
-        $('#blockReward').text(numeral(block.reward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#blockBaseReward').text(numeral(block.baseReward / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#blockReward').text(numeral(block.reward / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
         $('#blockTransactionSize').text(numeral(block.transactionsCumulativeSize).format('0,0') + ' bytes')
-        $('#blockTransactionFees').text(numeral(block.totalFeeAmount / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#blockTransactionFees').text(numeral(block.totalFeeAmount / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
         $('#blockNonce').text(numeral(block.nonce).format('0,0'))
         $('#previousBlockHash').html('<a href="./block.html?hash=' + block.prevHash + '">' + block.prevHash + '</a>')
         $('#transactionCount').text(block.transactions.length)
@@ -130,8 +130,8 @@ $(document).ready(function () {
           var txn = block.transactions[i]
           transactions.row.add([
             txn.hash,
-            numeral(txn.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
-            numeral(txn.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
+            numeral(txn.fee / DECIMAL_MULTIPLIER).format('0,0.00'),
+            numeral(txn.amount_out / DECIMAL_MULTIPLIER).format('0,0.00'),
             numeral(txn.size).format('0,0')
           ])
         }

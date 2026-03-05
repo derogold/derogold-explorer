@@ -37,10 +37,10 @@ $(document).ready(function () {
 
         $('#transactionHeaderHash').text(txDetails.hash)
         $('#transactionTimestamp').text((new Date(block.timestamp * 1000)).toGMTString())
-        $('#transactionFee').text(numeral(txDetails.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#transactionFee').text(numeral(txDetails.fee / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
         $('#transactionSize').text(numeral(txDetails.size).format('0,0') + ' bytes')
         $('#transactionRingSize').text(numeral(txDetails.mixin).format('0,0'))
-        $('#transactionAmount').text(numeral(txDetails.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#transactionAmount').text(numeral(txDetails.amount_out / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
 
         if (txDetails.paymentId && txDetails.paymentId.length !== 0) {
           $('#transactionPaymentId').html('<a href="./paymentid.html?id=' + txDetails.paymentId + '">' + txDetails.paymentId + '</a>')
@@ -101,7 +101,7 @@ $(document).ready(function () {
             targets: [0],
             render: function (data, type, row, meta) {
               if (type === 'display') {
-                data = numeral(data / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00')
+                data = numeral(data / DECIMAL_MULTIPLIER).format('0,0.00')
               }
               return data
             },
@@ -150,7 +150,7 @@ $(document).ready(function () {
             targets: [0],
             render: function (data, type, row, meta) {
               if (type === 'display') {
-                data = numeral(data / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00')
+                data = numeral(data / DECIMAL_MULTIPLIER).format('0,0.00')
               }
               return data
             },
@@ -171,8 +171,8 @@ $(document).ready(function () {
         }).columns.adjust().responsive.recalc()
 
         /* Daemon vout format: {amount, target: {type, data: {key}}} */
-        for (var i = 0; i < tx.vout.length; i++) {
-          var vout = tx.vout[i]
+        for (var j = 0; j < tx.vout.length; j++) {
+          var vout = tx.vout[j]
           localData.outputs.row.add([
             vout.amount,
             vout.target.data.key,
@@ -188,15 +188,15 @@ $(document).ready(function () {
         url: ExplorerConfig.apiBaseUrl + '/transaction/' + hash,
         dataType: 'json',
         type: 'GET',
-        cache: 'false',
+        cache: false,
         success: async function (txn) {
           $('#transactionHeaderHash').text(txn.tx.hash)
           $('#transactionTimestamp').text((new Date(txn.block.timestamp * 1000)).toGMTString())
-          $('#transactionFee').text(numeral(txn.tx.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+          $('#transactionFee').text(numeral(txn.tx.fee / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
           $('#transactionConfirmations').text(numeral(txn.block.depth).format('0,0'))
           $('#transactionSize').text(numeral(txn.tx.size).format('0,0') + ' bytes')
           $('#transactionRingSize').text(numeral(txn.tx.mixin).format('0,0'))
-          $('#transactionAmount').text(numeral(txn.tx.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+          $('#transactionAmount').text(numeral(txn.tx.amount_out / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
           if (txn.tx.paymentId.length !== 0) {
             $('#transactionPaymentId').html('<a href="./paymentid.html?id=' + txn.tx.paymentId + '">' + txn.tx.paymentId + '</a>')
           }
@@ -238,7 +238,7 @@ $(document).ready(function () {
               targets: [0],
               render: function (data, type, row, meta) {
                 if (type === 'display') {
-                  data = numeral(data / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00')
+                  data = numeral(data / DECIMAL_MULTIPLIER).format('0,0.00')
                 }
                 return data
               },
@@ -276,7 +276,7 @@ $(document).ready(function () {
               targets: [0],
               render: function (data, type, row, meta) {
                 if (type === 'display') {
-                  data = numeral(data / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00')
+                  data = numeral(data / DECIMAL_MULTIPLIER).format('0,0.00')
                 }
                 return data
               },
@@ -296,8 +296,8 @@ $(document).ready(function () {
             autoWidth: false
           }).columns.adjust().responsive.recalc()
 
-          for (var i = 0; i < txn.tx.outputs.length; i++) {
-            var output = txn.tx.outputs[i]
+          for (var j = 0; j < txn.tx.outputs.length; j++) {
+            var output = txn.tx.outputs[j]
             localData.outputs.row.add([
               output.amount,
               output.key,
@@ -350,7 +350,7 @@ async function checkTransaction() {
     if (owned) {
       totalOwned = totalOwned + parseInt(data[0])
       $(localData.outputs.row(idx).nodes()).addClass('is-ours')
-      $('#ourAmount').text(': Found ' + numeral(totalOwned / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+      $('#ourAmount').text(': Found ' + numeral(totalOwned / DECIMAL_MULTIPLIER).format('0,0.00') + ' ' + ExplorerConfig.ticker)
     }
   })
 }
@@ -371,7 +371,7 @@ async function checkOutput(transactionPublicKey, key, address, output) {
 
 function setPrivateViewKeyState(state) {
   if (state) {
-    $('#privateViewKey').removeClass('is-danger').addClass('is-danger')
+    $('#privateViewKey').addClass('is-danger')
   } else {
     $('#privateViewKey').removeClass('is-danger')
   }
@@ -379,7 +379,7 @@ function setPrivateViewKeyState(state) {
 
 function setRecipientAddressState(state) {
   if (state) {
-    $('#recipientAddress').removeClass('is-danger').addClass('is-danger')
+    $('#recipientAddress').addClass('is-danger')
   } else {
     $('#recipientAddress').removeClass('is-danger')
   }

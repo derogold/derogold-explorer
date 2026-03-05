@@ -1,4 +1,6 @@
 const localData = {}
+const HASH_REGEX = /^[0-9a-fA-F]{64}$/
+const DECIMAL_MULTIPLIER = Math.pow(10, ExplorerConfig.decimalPoints)
 
 if (typeof google !== 'undefined') {
   google.charts.load('current', {
@@ -92,8 +94,7 @@ function searchTransactionPool (term) {
 }
 
 function isHash (str) {
-  const regex = new RegExp('^[0-9a-fA-F]{64}$')
-  return regex.test(str)
+  return HASH_REGEX.test(str)
 }
 
 function getCurrentNetworkHashRateLoop () {
@@ -114,7 +115,7 @@ function getCurrentNetworkHashRateLoop () {
       url: ExplorerConfig.apiBaseUrl + '/block/header/top',
       dataType: 'json',
       type: 'GET',
-      cache: 'false',
+      cache: false,
       success: function (header) {
         localData.networkHashRate = Math.floor(header.difficulty / ExplorerConfig.blockTargetTime)
         $('#globalHashRate').text(formatHashRate(localData.networkHashRate))
@@ -149,7 +150,7 @@ function searchForTerm (term) {
         url: ExplorerConfig.apiBaseUrl + '/block/header/' + term + '?random=' + (new Date()).getTime(),
         dataType: 'json',
         type: 'GET',
-        cache: 'false',
+        cache: false,
         success: function (data) {
           window.location = './block.html?hash=' + data.hash
         },
@@ -180,7 +181,7 @@ function searchForTerm (term) {
         url: ExplorerConfig.apiBaseUrl + '/block/header/' + term + '?random=' + (new Date()).getTime(),
         dataType: 'json',
         type: 'GET',
-        cache: 'false',
+        cache: false,
         success: function (data) {
           /* We found a block that matched, let's go take a look at it */
           window.location = './block.html?hash=' + data.hash
@@ -191,7 +192,7 @@ function searchForTerm (term) {
             url: ExplorerConfig.apiBaseUrl + '/transaction/' + term + '?random=' + (new Date()).getTime(),
             dataType: 'json',
             type: 'GET',
-            cache: 'false',
+            cache: false,
             success: function (data) {
               /* Great, we found a matching transaction, let's go take a look at it */
               window.location = './transaction.html?hash=' + data.tx.hash
@@ -202,7 +203,7 @@ function searchForTerm (term) {
                 url: ExplorerConfig.apiBaseUrl + '/transactions/' + term + '?random=' + (new Date()).getTime(),
                 dataType: 'json',
                 type: 'GET',
-                cache: 'false',
+                cache: false,
                 success: function (data) {
                   if (data.length !== 0) {
                     /* It's a payment Id, let's display the list */
@@ -231,7 +232,7 @@ function searchForTerm (term) {
 
 function setSearchValueErrorState (state) {
   if (state) {
-    $('#searchValue').removeClass('is-danger').addClass('is-danger')
+    $('#searchValue').addClass('is-danger')
   } else {
     $('#searchValue').removeClass('is-danger')
   }
