@@ -5,6 +5,23 @@ $(document).ready(function () {
     return window.location = '/?search=' + id
   }
 
+  if (ExplorerConfig.daemonMode) {
+    /* Payment ID lookup requires middleware indexing and is not available
+       when running against a local daemon directly. */
+    $('#headerPaymentId').text(id)
+    $('#txnCount').text('N/A')
+    $('#paymentIdTransactions').DataTable({
+      searching: false,
+      info: false,
+      paging: false,
+      language: {
+        emptyTable: 'Payment ID search is not available in local daemon mode'
+      },
+      autoWidth: false
+    }).columns.adjust().responsive.recalc()
+    return
+  }
+
   $.ajax({
     url: ExplorerConfig.apiBaseUrl + '/transactions/' + id,
     dataType: 'json',

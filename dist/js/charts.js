@@ -58,76 +58,138 @@ $(document).ready(function () {
 })
 
 function updateCharts() {
-  $.ajax({
-    url: ExplorerConfig.apiBaseUrl + '/chain/stats',
-    dataType: 'json',
-    type: 'GET',
-    cache: false,
-    success: function (data) {
-      const difficultyChart = new google.visualization.AreaChart(document.getElementById('difficulty'))
-      const blockSizeChart = new google.visualization.AreaChart(document.getElementById('blockSize'))
-      const txnChart = new google.visualization.AreaChart(document.getElementById('txnCount'))
-      const nonceChart = new google.visualization.AreaChart(document.getElementById('nonce'))
+  if (ExplorerConfig.daemonMode) {
+    /* In daemon mode, get the top block height first, then fetch recent blocks.
+       Note: f_blocks_list_json returns ~30 blocks; the nonce chart is not shown
+       because nonce data is not available from this endpoint. */
+    daemonRpc('getlastblockheader', {}, function (headerResult) {
+      var height = headerResult.block_header.height
+      daemonRpc('f_blocks_list_json', { height: height }, function (result) {
+        var data = result.blocks
 
-      const difficultyData = [
-        ['Block Time', 'Difficulty', 'Hashrate']
-      ]
+        const difficultyChart = new google.visualization.AreaChart(document.getElementById('difficulty'))
+        const blockSizeChart = new google.visualization.AreaChart(document.getElementById('blockSize'))
+        const txnChart = new google.visualization.AreaChart(document.getElementById('txnCount'))
 
-      const blockSizeData = [
-        ['Block Time', 'Block Size']
-      ]
+        const difficultyData = [
+          ['Block Time', 'Difficulty', 'Hashrate']
+        ]
 
-      const txnData = [
-        ['Block Time', 'Transaction Count']
-      ]
+        const blockSizeData = [
+          ['Block Time', 'Block Size']
+        ]
 
-      const nonceData = [
-        ['Block Time', 'Nonce']
-      ]
+        const txnData = [
+          ['Block Time', 'Transaction Count']
+        ]
 
-      for (var i = 0; i < data.length; i++) {
-        const block = data[i]
-        difficultyData.push([
-          (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
-          parseInt(block.difficulty),
-          parseInt(block.difficulty) / ExplorerConfig.blockTargetTime
-        ])
+        for (var i = 0; i < data.length; i++) {
+          const block = data[i]
+          difficultyData.push([
+            (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
+            parseInt(block.difficulty),
+            parseInt(block.difficulty) / ExplorerConfig.blockTargetTime
+          ])
 
-        blockSizeData.push([
-          (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
-          parseInt(block.size)
-        ])
+          blockSizeData.push([
+            (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
+            parseInt(block.cumul_size)
+          ])
 
-        txnData.push([
-          (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
-          parseInt(block.txnCount),
-        ])
+          txnData.push([
+            (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
+            parseInt(block.tx_count)
+          ])
+        }
 
-        nonceData.push([
-          (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
-          parseInt(block.nonce)
-        ])
+        const difficultyChartData = google.visualization.arrayToDataTable(difficultyData)
+        const difficultyChartOptions = Object.assign({}, blockchainChartOptions)
+        difficultyChartOptions.colors = ['#f6b26b','#40c18e']
+        difficultyChart.draw(difficultyChartData, difficultyChartOptions)
+
+        const blockSizeChartData = google.visualization.arrayToDataTable(blockSizeData)
+        const blockSizeChartOptions = Object.assign({}, blockchainChartOptions)
+        blockSizeChartOptions.colors = ['#8e7cc3']
+        blockSizeChart.draw(blockSizeChartData, blockSizeChartOptions)
+
+        const txnChartData = google.visualization.arrayToDataTable(txnData)
+        const txnChartOptions = Object.assign({}, blockchainChartOptions)
+        txnChartOptions.colors = ['#00853d']
+        txnChart.draw(txnChartData, txnChartOptions)
+      })
+    })
+  } else {
+    $.ajax({
+      url: ExplorerConfig.apiBaseUrl + '/chain/stats',
+      dataType: 'json',
+      type: 'GET',
+      cache: false,
+      success: function (data) {
+        const difficultyChart = new google.visualization.AreaChart(document.getElementById('difficulty'))
+        const blockSizeChart = new google.visualization.AreaChart(document.getElementById('blockSize'))
+        const txnChart = new google.visualization.AreaChart(document.getElementById('txnCount'))
+        const nonceChart = new google.visualization.AreaChart(document.getElementById('nonce'))
+
+        const difficultyData = [
+          ['Block Time', 'Difficulty', 'Hashrate']
+        ]
+
+        const blockSizeData = [
+          ['Block Time', 'Block Size']
+        ]
+
+        const txnData = [
+          ['Block Time', 'Transaction Count']
+        ]
+
+        const nonceData = [
+          ['Block Time', 'Nonce']
+        ]
+
+        for (var i = 0; i < data.length; i++) {
+          const block = data[i]
+          difficultyData.push([
+            (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
+            parseInt(block.difficulty),
+            parseInt(block.difficulty) / ExplorerConfig.blockTargetTime
+          ])
+
+          blockSizeData.push([
+            (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
+            parseInt(block.size)
+          ])
+
+          txnData.push([
+            (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
+            parseInt(block.txnCount),
+          ])
+
+          nonceData.push([
+            (new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))),
+            parseInt(block.nonce)
+          ])
+        }
+
+        const difficultyChartData = google.visualization.arrayToDataTable(difficultyData)
+        const difficultyChartOptions = blockchainChartOptions
+        difficultyChartOptions.colors = ['#f6b26b','#40c18e']
+        difficultyChart.draw(difficultyChartData, difficultyChartOptions)
+
+        const blockSizeChartData = google.visualization.arrayToDataTable(blockSizeData)
+        const blockSizeChartOptions = blockchainChartOptions
+        blockSizeChartOptions.colors = ['#8e7cc3']
+        blockSizeChart.draw(blockSizeChartData, blockSizeChartOptions)
+
+        const txnChartData = google.visualization.arrayToDataTable(txnData)
+        const txnChartOptions = blockchainChartOptions
+        txnChartOptions.colors = ['#00853d']
+        txnChart.draw(txnChartData, txnChartOptions)
+
+        const nonceChartData = google.visualization.arrayToDataTable(nonceData)
+        const nonceChartOptions = blockchainChartOptions
+        nonceChartOptions.colors = ['#212721']
+        nonceChart.draw(nonceChartData, nonceChartOptions)
       }
-
-      const difficultyChartData = google.visualization.arrayToDataTable(difficultyData)
-      const difficultyChartOptions = blockchainChartOptions
-      difficultyChartOptions.colors = ['#f6b26b','#40c18e']
-      difficultyChart.draw(difficultyChartData, difficultyChartOptions)
-
-      const blockSizeChartData = google.visualization.arrayToDataTable(blockSizeData)
-      const blockSizeChartOptions = blockchainChartOptions
-      blockSizeChartOptions.colors = ['#8e7cc3']
-      blockSizeChart.draw(blockSizeChartData, blockSizeChartOptions)
-
-      const txnChartData = google.visualization.arrayToDataTable(txnData)
-      const txnChartOptions = blockchainChartOptions
-      txnChartOptions.colors = ['#00853d']
-      txnChart.draw(txnChartData, txnChartOptions)
-
-      const nonceChartData = google.visualization.arrayToDataTable(nonceData)
-      const nonceChartOptions = blockchainChartOptions
-      nonceChartOptions.colors = ['#212721']
-      nonceChart.draw(nonceChartData, nonceChartOptions)
-    }
-  })
+    })
+  }
 }

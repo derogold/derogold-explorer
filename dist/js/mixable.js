@@ -5,7 +5,9 @@ $(document).ready(function () {
     paging: false,
     lengthMenu: -1,
     language: {
-      emptyTable: 'Loading mixable amounts... Please wait...'
+      emptyTable: ExplorerConfig.daemonMode
+        ? 'Mixable amounts are not available in local daemon mode'
+        : 'Loading mixable amounts... Please wait...'
     },
     columnDefs: [{
       targets: [3],
@@ -78,7 +80,9 @@ $(document).ready(function () {
     autoWidth: false
   }).columns.adjust().responsive.recalc().draw(false)
 
-  getMixableAmounts()
+  if (!ExplorerConfig.daemonMode) {
+    getMixableAmounts()
+  }
 })
 
 function isPrettyAmount (amount) {

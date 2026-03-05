@@ -5,7 +5,9 @@ $(document).ready(function () {
     paging: false,
     lengthMenu: -1,
     language: {
-      emptyTable: 'No Community Nodes Found'
+      emptyTable: ExplorerConfig.daemonMode
+        ? 'Node statistics are not available in local daemon mode'
+        : 'No Community Nodes Found'
     },
     columnDefs: [
       {
@@ -66,9 +68,11 @@ $(document).ready(function () {
     autoWidth: false
   }).columns.adjust().responsive.recalc().draw(false)
 
-  google.charts.setOnLoadCallback(function () {
-    getAndDrawNodeStats()
-  })
+  if (!ExplorerConfig.daemonMode) {
+    google.charts.setOnLoadCallback(function () {
+      getAndDrawNodeStats()
+    })
+  }
 })
 
 function getAndDrawNodeStats () {

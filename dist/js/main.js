@@ -148,99 +148,152 @@ $(document).ready(function () {
 })
 
 function getAndDisplayLastBlockHeader() {
-  $.ajax({
-    url: ExplorerConfig.apiBaseUrl + '/block/header/top',
-    dataType: 'json',
-    type: 'GET',
-    cache: 'false',
-    success: function (data) {
-      if (data.height !== topBlockHeight) {
-        topBlockHeight = data.height
+  if (ExplorerConfig.daemonMode) {
+    daemonRpc('getlastblockheader', {}, function (result) {
+      var header = result.block_header
+      if (header.height !== topBlockHeight) {
+        topBlockHeight = header.height
         updateRecentBlocks(recentBlocks, topBlockHeight)
       }
-      $('#blockchainHeight').text(numeral(data.height).format('0,0'))
-      $('#blockchainDifficulty').text(numeral(data.difficulty).format('0,0'))
-      $('#blockchainHashRate').text(numeral(data.difficulty / ExplorerConfig.blockTargetTime).format('0,0') + ' H/s')
-      $('#blockchainReward').text(numeral(data.reward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
-      $('#blockchainTransactions').text(numeral(data.alreadyGeneratedTransactions).format('0,0'))
-      $('#blockchainCirculatingSupply').text(numeral(data.alreadyGeneratedCoins / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
-      $('#blockchainTotalSupply').text(numeral(ExplorerConfig.maxSupply / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+      $('#blockchainHeight').text(numeral(header.height).format('0,0'))
+      $('#blockchainDifficulty').text(numeral(header.difficulty).format('0,0'))
+      $('#blockchainHashRate').text(numeral(header.difficulty / ExplorerConfig.blockTargetTime).format('0,0') + ' H/s')
+      $('#blockchainReward').text(numeral(header.reward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+
+      /* Fetch full block details for supply and transaction count */
+      daemonRpc('f_block_json', { hash: header.hash }, function (blockResult) {
+        var block = blockResult.block
+        $('#blockchainTransactions').text(numeral(block.alreadyGeneratedTransactions).format('0,0'))
+        var coins = parseFloat(block.alreadyGeneratedCoins)
+        $('#blockchainCirculatingSupply').text(numeral(coins / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#blockchainTotalSupply').text(numeral(ExplorerConfig.maxSupply / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        var emiss = (coins / ExplorerConfig.maxSupply) * 100
+        $('#blockchainSupplyEmission').text(numeral(emiss).format('0.000000') + ' %')
+      })
 
       var nextFork
       for (var i = ExplorerConfig.forkHeights.length; i > 0; i--) {
-        if (data.height >= ExplorerConfig.forkHeights[i]) {
+        if (header.height >= ExplorerConfig.forkHeights[i]) {
           nextFork = ExplorerConfig.forkHeights[i + 1]
           break
         }
       }
-      var forkInSeconds = (nextFork - data.height) * ExplorerConfig.blockTargetTime
-      var forkTime = secondsToHumanReadable(forkInSeconds)
-      var estimatedFork = (Math.floor(Date.now() / 1000) + forkInSeconds)
-      $('#nextForkIn').text(forkTime.days + 'd ' + forkTime.hours + 'h ' + forkTime.minutes + 'm ' + forkTime.seconds + 's').prop('title', (new Date(estimatedFork * 1000)).toGMTString())
+      if (nextFork) {
+        var forkInSeconds = (nextFork - header.height) * ExplorerConfig.blockTargetTime
+        var forkTime = secondsToHumanReadable(forkInSeconds)
+        var estimatedFork = (Math.floor(Date.now() / 1000) + forkInSeconds)
+        $('#nextForkIn').text(forkTime.days + 'd ' + forkTime.hours + 'h ' + forkTime.minutes + 'm ' + forkTime.seconds + 's').prop('title', (new Date(estimatedFork * 1000)).toGMTString())
+      }
+    })
+  } else {
+    $.ajax({
+      url: ExplorerConfig.apiBaseUrl + '/block/header/top',
+      dataType: 'json',
+      type: 'GET',
+      cache: 'false',
+      success: function (data) {
+        if (data.height !== topBlockHeight) {
+          topBlockHeight = data.height
+          updateRecentBlocks(recentBlocks, topBlockHeight)
+        }
+        $('#blockchainHeight').text(numeral(data.height).format('0,0'))
+        $('#blockchainDifficulty').text(numeral(data.difficulty).format('0,0'))
+        $('#blockchainHashRate').text(numeral(data.difficulty / ExplorerConfig.blockTargetTime).format('0,0') + ' H/s')
+        $('#blockchainReward').text(numeral(data.reward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#blockchainTransactions').text(numeral(data.alreadyGeneratedTransactions).format('0,0'))
+        $('#blockchainCirculatingSupply').text(numeral(data.alreadyGeneratedCoins / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#blockchainTotalSupply').text(numeral(ExplorerConfig.maxSupply / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
 
-      const maxSupply = ExplorerConfig.maxSupply
-      const curSupply = data.alreadyGeneratedCoins
-      const emiss = (curSupply / maxSupply) * 100
+        var nextFork
+        for (var i = ExplorerConfig.forkHeights.length; i > 0; i--) {
+          if (data.height >= ExplorerConfig.forkHeights[i]) {
+            nextFork = ExplorerConfig.forkHeights[i + 1]
+            break
+          }
+        }
+        var forkInSeconds = (nextFork - data.height) * ExplorerConfig.blockTargetTime
+        var forkTime = secondsToHumanReadable(forkInSeconds)
+        var estimatedFork = (Math.floor(Date.now() / 1000) + forkInSeconds)
+        $('#nextForkIn').text(forkTime.days + 'd ' + forkTime.hours + 'h ' + forkTime.minutes + 'm ' + forkTime.seconds + 's').prop('title', (new Date(estimatedFork * 1000)).toGMTString())
 
-      $('#blockchainSupplyEmission').text(numeral(emiss).format('0.000000') + ' %')
-    }
-  })
+        const maxSupply = ExplorerConfig.maxSupply
+        const curSupply = data.alreadyGeneratedCoins
+        const emiss = (curSupply / maxSupply) * 100
+
+        $('#blockchainSupplyEmission').text(numeral(emiss).format('0.000000') + ' %')
+      }
+    })
+  }
 }
 
 function updateTransactionPool(table) {
-  $.ajax({
-    url: ExplorerConfig.apiBaseUrl + '/transaction/pool',
-    dataType: 'json',
-    type: 'GET',
-    cache: 'false',
-    success: function (data) {
+  if (ExplorerConfig.daemonMode) {
+    daemonRpc('f_on_transactions_pool_json', {}, function (result) {
+      var data = result.transactions
       $("#transactionPoolCount").text(data.length)
       table.clear()
       for (var i = 0; i < data.length; i++) {
         var txn = data[i]
         table.row.add([
-          numeral(txn.amount / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
+          numeral(txn.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
           numeral(txn.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
           numeral(txn.size).format('0,0'),
-          txn.txnHash
+          txn.hash
         ])
       }
       table.draw(false)
-
       checkForSearchTerm()
-    }
-  })
+    })
+  } else {
+    $.ajax({
+      url: ExplorerConfig.apiBaseUrl + '/transaction/pool',
+      dataType: 'json',
+      type: 'GET',
+      cache: 'false',
+      success: function (data) {
+        $("#transactionPoolCount").text(data.length)
+        table.clear()
+        for (var i = 0; i < data.length; i++) {
+          var txn = data[i]
+          table.row.add([
+            numeral(txn.amount / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
+            numeral(txn.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00'),
+            numeral(txn.size).format('0,0'),
+            txn.txnHash
+          ])
+        }
+        table.draw(false)
+        checkForSearchTerm()
+      }
+    })
+  }
 }
 
 function updateRecentBlocks(table, height) {
-  $.ajax({
-    url: ExplorerConfig.apiBaseUrl + '/block/headers/' + height,
-    dataType: 'json',
-    type: 'GET',
-    cache: 'false',
-    success: function (data) {
+  if (ExplorerConfig.daemonMode) {
+    daemonRpc('f_blocks_list_json', { height: height }, function (result) {
       table.clear()
 
       var chartData = [
         ['Block Time', 'Difficulty', 'Block Size', 'Txn Count']
       ]
 
-      for (var i = 0; i < data.length; i++) {
-        var block = data[i]
+      for (var i = 0; i < result.blocks.length; i++) {
+        var block = result.blocks[i]
         chartData.push(
-          [(new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))), parseInt(block.difficulty), parseInt(block.size), parseInt(block.tx_count)]
+          [(new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))), parseInt(block.difficulty), parseInt(block.cumul_size), parseInt(block.tx_count)]
         )
 
         table.row.add([
           numeral(block.height).format('0,0'),
-          numeral(block.size).format('0,0'),
+          numeral(block.cumul_size).format('0,0'),
           block.hash,
           numeral(block.difficulty/1000/1000).format('0,0.000') + ' M',
           numeral(block.tx_count).format('0,0'),
           (new Date(block.timestamp * 1000)).toLocaleTimeString(),
           {
-            url: block.poolURL || false,
-            name: block.poolName || 'Unknown'
+            url: false,
+            name: 'Unknown'
           }
         ])
       }
@@ -248,8 +301,46 @@ function updateRecentBlocks(table, height) {
       blockchainChartData = google.visualization.arrayToDataTable(chartData)
       table.draw(false)
       drawBlockchainChart()
-    }
-  })
+    })
+  } else {
+    $.ajax({
+      url: ExplorerConfig.apiBaseUrl + '/block/headers/' + height,
+      dataType: 'json',
+      type: 'GET',
+      cache: 'false',
+      success: function (data) {
+        table.clear()
+
+        var chartData = [
+          ['Block Time', 'Difficulty', 'Block Size', 'Txn Count']
+        ]
+
+        for (var i = 0; i < data.length; i++) {
+          var block = data[i]
+          chartData.push(
+            [(new Date(block.timestamp * 1000 + ((new Date()).getTimezoneOffset() * 60 * 1000))), parseInt(block.difficulty), parseInt(block.size), parseInt(block.tx_count)]
+          )
+
+          table.row.add([
+            numeral(block.height).format('0,0'),
+            numeral(block.size).format('0,0'),
+            block.hash,
+            numeral(block.difficulty/1000/1000).format('0,0.000') + ' M',
+            numeral(block.tx_count).format('0,0'),
+            (new Date(block.timestamp * 1000)).toLocaleTimeString(),
+            {
+              url: block.poolURL || false,
+              name: block.poolName || 'Unknown'
+            }
+          ])
+        }
+
+        blockchainChartData = google.visualization.arrayToDataTable(chartData)
+        table.draw(false)
+        drawBlockchainChart()
+      }
+    })
+  }
 }
 
 function drawBlockchainChart() {

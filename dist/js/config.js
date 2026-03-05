@@ -1,5 +1,10 @@
 const ExplorerConfig = {
   apiBaseUrl: 'https://api.derogold.online',
+  /* Set daemonMode to true and configure daemonUrl to run the explorer
+     directly against a local derogold daemon (requires --enable-blockexplorer).
+     Note: the daemon must have CORS enabled or be accessible from the same origin. */
+  daemonMode: false,
+  daemonUrl: 'http://127.0.0.1:6969',
   ticker: 'DEGO',
   maxSupply: 10000000000000000,
   emissionSpeed: 24,

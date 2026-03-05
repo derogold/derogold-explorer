@@ -29,39 +29,52 @@ $(document).ready(function () {
   })
 
   TurtleCoinUtils.on('ready', () => {
-    $.ajax({
-      url: ExplorerConfig.apiBaseUrl + '/transaction/' + hash,
-      dataType: 'json',
-      type: 'GET',
-      cache: 'false',
-      success: async function (txn) {
-        $('#transactionHeaderHash').text(txn.tx.hash)
-        $('#transactionTimestamp').text((new Date(txn.block.timestamp * 1000)).toGMTString())
-        $('#transactionFee').text(numeral(txn.tx.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
-        $('#transactionConfirmations').text(numeral(txn.block.depth).format('0,0'))
-        $('#transactionSize').text(numeral(txn.tx.size).format('0,0') + ' bytes')
-        $('#transactionRingSize').text(numeral(txn.tx.mixin).format('0,0'))
-        $('#transactionAmount').text(numeral(txn.tx.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
-        if (txn.tx.paymentId.length !== 0) {
-          $('#transactionPaymentId').html('<a href="./paymentid.html?id=' + txn.tx.paymentId + '">' + txn.tx.paymentId + '</a>')
-        }
-        $('#blockHeight').html('<a href="./?search=' + txn.block.height + '">' + numeral(txn.block.height).format('0,0') + '</a>')
-        $('#blockHash').html('<a href="./block.html?hash=' + txn.block.hash + '">' + txn.block.hash + '</a>')
-        $('#transactionNonce').text(txn.tx.nonce)
-        $('#transactionUnlockTime').text(numeral(txn.tx.unlock_time).format('0,0'))
-        $('#transactionPublicKey').text(txn.tx.publicKey)
-        $('#inputCount').text(txn.tx.inputs.length)
-        $('#outputCount').text(txn.tx.outputs.length)
+    if (ExplorerConfig.daemonMode) {
+      daemonRpc('f_transaction_json', { hash: hash }, async function (result) {
+        var txDetails = result.txDetails
+        var tx = result.tx
+        var block = result.block
 
-        /**
+        $('#transactionHeaderHash').text(txDetails.hash)
+        $('#transactionTimestamp').text((new Date(block.timestamp * 1000)).toGMTString())
+        $('#transactionFee').text(numeral(txDetails.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+        $('#transactionSize').text(numeral(txDetails.size).format('0,0') + ' bytes')
+        $('#transactionRingSize').text(numeral(txDetails.mixin).format('0,0'))
+        $('#transactionAmount').text(numeral(txDetails.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+
+        if (txDetails.paymentId && txDetails.paymentId.length !== 0) {
+          $('#transactionPaymentId').html('<a href="./paymentid.html?id=' + txDetails.paymentId + '">' + txDetails.paymentId + '</a>')
+        }
+
+        $('#blockHeight').html('<a href="./?search=' + block.height + '">' + numeral(block.height).format('0,0') + '</a>')
+        $('#blockHash').html('<a href="./block.html?hash=' + block.hash + '">' + block.hash + '</a>')
+        $('#transactionUnlockTime').text(numeral(tx.unlock_time).format('0,0'))
+        $('#inputCount').text(tx.vin.length)
+        $('#outputCount').text(tx.vout.length)
+
+        /* Parse the extra field to extract the transaction public key */
+        const transaction = new TurtleCoinUtils.Transaction()
+        await transaction.parseExtra(tx.extra)
+
+        if (transaction.publicKey) {
+          $('#transactionPublicKey').text(transaction.publicKey)
+        }
+
+        if (transaction.paymentId) {
+          $('#transactionNonce').text(transaction.paymentId)
+        }
+
+        /* Fetch current chain height to calculate confirmations */
+        daemonRpc('getlastblockheader', {}, function (headerResult) {
+          var depth = headerResult.block_header.height - block.height
+          $('#transactionConfirmations').text(numeral(depth).format('0,0'))
+        })
+
+        /*
          * If a transaction has 0 ring participants AND the fee is 0 AND there is only one input
          * then it is probably a coinbase transaction and we want to display extra information
-         * that is available in the interface
          */
-        if (txn.tx.mixin === 0 && txn.tx.fee === 0 && txn.tx.inputs.length === 1) {
-          const transaction = new TurtleCoinUtils.Transaction()
-          await transaction.parseExtra(txn.tx.extra)
-
+        if (txDetails.mixin === 0 && txDetails.fee === 0 && tx.vin.length === 1) {
           if (transaction.recipientPublicSpendKey && transaction.recipientPublicViewKey) {
             const crypto = new TurtleCoinUtils.Crypto()
 
@@ -70,14 +83,12 @@ $(document).ready(function () {
                   transaction.recipientPublicSpendKey, transaction.recipientPublicViewKey)
 
               $('#minerFingerprint').text(fingerprint.replace(/(..)/g, '$1:').slice(0, -1))
-
               $('#fingerPrintRow').css('display', '')
             })
           }
 
           if (transaction.poolNonceHex) {
             $('#poolNonce').text(transaction.poolNonceHex)
-
             $('#poolNonceRow').css('display', '')
           }
         }
@@ -110,12 +121,23 @@ $(document).ready(function () {
           autoWidth: false
         }).columns.adjust().responsive.recalc()
 
-        for (var i = 0; i < txn.tx.inputs.length; i++) {
-          var input = txn.tx.inputs[i]
+        /* Daemon vin format: {type: "ff"|"02", value: {height} | {k_image, amount, key_offsets}} */
+        for (var i = 0; i < tx.vin.length; i++) {
+          var vin = tx.vin[i]
+          var amount, keyImage, inputType
+          if (vin.type === 'ff') {
+            amount = 0
+            keyImage = ''
+            inputType = 'ff'
+          } else {
+            amount = vin.value.amount
+            keyImage = vin.value.k_image
+            inputType = '02'
+          }
           inputs.row.add([
-            input.amount,
-            (input.keyImage.length === 0) ? 'Miner Reward' : input.keyImage,
-            input.type.toUpperCase()
+            amount,
+            (keyImage.length === 0) ? 'Miner Reward' : keyImage,
+            inputType.toUpperCase()
           ])
         }
         inputs.draw(false)
@@ -148,20 +170,147 @@ $(document).ready(function () {
           autoWidth: false
         }).columns.adjust().responsive.recalc()
 
-        for (var i = 0; i < txn.tx.outputs.length; i++) {
-          var output = txn.tx.outputs[i]
+        /* Daemon vout format: {amount, target: {type, data: {key}}} */
+        for (var i = 0; i < tx.vout.length; i++) {
+          var vout = tx.vout[i]
           localData.outputs.row.add([
-            output.amount,
-            output.key,
-            output.type.toUpperCase()
+            vout.amount,
+            vout.target.data.key,
+            vout.target.type.toUpperCase()
           ])
         }
         localData.outputs.draw(false)
-      },
-      error: function () {
+      }, function () {
         window.location = './?search=' + hash
-      }
-    })
+      })
+    } else {
+      $.ajax({
+        url: ExplorerConfig.apiBaseUrl + '/transaction/' + hash,
+        dataType: 'json',
+        type: 'GET',
+        cache: 'false',
+        success: async function (txn) {
+          $('#transactionHeaderHash').text(txn.tx.hash)
+          $('#transactionTimestamp').text((new Date(txn.block.timestamp * 1000)).toGMTString())
+          $('#transactionFee').text(numeral(txn.tx.fee / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+          $('#transactionConfirmations').text(numeral(txn.block.depth).format('0,0'))
+          $('#transactionSize').text(numeral(txn.tx.size).format('0,0') + ' bytes')
+          $('#transactionRingSize').text(numeral(txn.tx.mixin).format('0,0'))
+          $('#transactionAmount').text(numeral(txn.tx.amount_out / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
+          if (txn.tx.paymentId.length !== 0) {
+            $('#transactionPaymentId').html('<a href="./paymentid.html?id=' + txn.tx.paymentId + '">' + txn.tx.paymentId + '</a>')
+          }
+          $('#blockHeight').html('<a href="./?search=' + txn.block.height + '">' + numeral(txn.block.height).format('0,0') + '</a>')
+          $('#blockHash').html('<a href="./block.html?hash=' + txn.block.hash + '">' + txn.block.hash + '</a>')
+          $('#transactionNonce').text(txn.tx.nonce)
+          $('#transactionUnlockTime').text(numeral(txn.tx.unlock_time).format('0,0'))
+          $('#transactionPublicKey').text(txn.tx.publicKey)
+          $('#inputCount').text(txn.tx.inputs.length)
+          $('#outputCount').text(txn.tx.outputs.length)
+
+          if (txn.tx.mixin === 0 && txn.tx.fee === 0 && txn.tx.inputs.length === 1) {
+            const transaction = new TurtleCoinUtils.Transaction()
+            await transaction.parseExtra(txn.tx.extra)
+
+            if (transaction.recipientPublicSpendKey && transaction.recipientPublicViewKey) {
+              const crypto = new TurtleCoinUtils.Crypto()
+
+              TurtleCoinUtils.on('ready', async () => {
+                const fingerprint = await crypto.cn_fast_hash(
+                    transaction.recipientPublicSpendKey, transaction.recipientPublicViewKey)
+
+                $('#minerFingerprint').text(fingerprint.replace(/(..)/g, '$1:').slice(0, -1))
+                $('#fingerPrintRow').css('display', '')
+              })
+            }
+
+            if (transaction.poolNonceHex) {
+              $('#poolNonce').text(transaction.poolNonceHex)
+              $('#poolNonceRow').css('display', '')
+            }
+          }
+
+          const inputs = $('#inputs').DataTable({
+            columnDefs: [{
+              targets: [1, 2],
+              searchable: false
+            }, {
+              targets: [0],
+              render: function (data, type, row, meta) {
+                if (type === 'display') {
+                  data = numeral(data / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00')
+                }
+                return data
+              },
+              searchable: false
+            }],
+            order: [
+              [0, 'asc'],
+              [1, 'asc']
+            ],
+            searching: false,
+            info: false,
+            paging: false,
+            lengthMenu: -1,
+            language: {
+              emptyTable: "No Transaction Inputs"
+            },
+            autoWidth: false
+          }).columns.adjust().responsive.recalc()
+
+          for (var i = 0; i < txn.tx.inputs.length; i++) {
+            var input = txn.tx.inputs[i]
+            inputs.row.add([
+              input.amount,
+              (input.keyImage.length === 0) ? 'Miner Reward' : input.keyImage,
+              input.type.toUpperCase()
+            ])
+          }
+          inputs.draw(false)
+
+          localData.outputs = $('#outputs').DataTable({
+            columnDefs: [{
+              targets: [0, 1, 2],
+              searchable: false
+            }, {
+              targets: [0],
+              render: function (data, type, row, meta) {
+                if (type === 'display') {
+                  data = numeral(data / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00')
+                }
+                return data
+              },
+              searchable: false
+            }],
+            order: [
+              [0, 'asc'],
+              [1, 'asc']
+            ],
+            searching: false,
+            info: false,
+            paging: false,
+            lengthMenu: -1,
+            language: {
+              emptyTable: "No Transaction Outputs"
+            },
+            autoWidth: false
+          }).columns.adjust().responsive.recalc()
+
+          for (var i = 0; i < txn.tx.outputs.length; i++) {
+            var output = txn.tx.outputs[i]
+            localData.outputs.row.add([
+              output.amount,
+              output.key,
+              output.type.toUpperCase()
+            ])
+          }
+          localData.outputs.draw(false)
+        },
+        error: function () {
+          window.location = './?search=' + hash
+        }
+      })
+    }
   })
 })
 

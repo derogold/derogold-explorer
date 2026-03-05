@@ -5,7 +5,9 @@ $(document).ready(function () {
     paging: false,
     lengthMenu: -1,
     language: {
-      emptyTable: 'No Mining Pools Found'
+      emptyTable: ExplorerConfig.daemonMode
+        ? 'Pool statistics are not available in local daemon mode'
+        : 'No Mining Pools Found'
     },
     columnDefs: [
       {
@@ -65,10 +67,12 @@ $(document).ready(function () {
     autoWidth: false
   }).columns.adjust().responsive.recalc().draw(false)
 
-  google.charts.setOnLoadCallback(function () {
-    getCurrentNetworkHashRateLoop()
-    getAndDrawPoolStats()
-  })
+  if (!ExplorerConfig.daemonMode) {
+    google.charts.setOnLoadCallback(function () {
+      getCurrentNetworkHashRateLoop()
+      getAndDrawPoolStats()
+    })
+  }
 })
 
 function getAndDrawPoolStats () {
