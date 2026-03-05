@@ -24,6 +24,18 @@ $(document).ready(function () {
   })
 })
 
+function formatHashRate (hashrate) {
+  if (hashrate >= 1e9) {
+    return numeral(hashrate / 1e9).format('0,0.00') + ' GH/s'
+  } else if (hashrate >= 1e6) {
+    return numeral(hashrate / 1e6).format('0,0.00') + ' MH/s'
+  } else if (hashrate >= 1e3) {
+    return numeral(hashrate / 1e3).format('0,0.00') + ' KH/s'
+  } else {
+    return numeral(hashrate).format('0,0') + ' H/s'
+  }
+}
+
 /* Helper for making JSON-RPC 2.0 calls to the local daemon */
 function daemonRpc (method, params, successFn, errorFn) {
   $.ajax({
@@ -88,7 +100,7 @@ function getCurrentNetworkHashRateLoop () {
   if (ExplorerConfig.daemonMode) {
     daemonRpc('getlastblockheader', {}, function (result) {
       localData.networkHashRate = Math.floor(result.block_header.difficulty / ExplorerConfig.blockTargetTime)
-      $('#globalHashRate').text(numeral(localData.networkHashRate).format('0,0') + ' H/s')
+      $('#globalHashRate').text(formatHashRate(localData.networkHashRate))
       setTimeout(function () {
         getCurrentNetworkHashRateLoop()
       }, 15000)
@@ -105,7 +117,7 @@ function getCurrentNetworkHashRateLoop () {
       cache: 'false',
       success: function (header) {
         localData.networkHashRate = Math.floor(header.difficulty / ExplorerConfig.blockTargetTime)
-        $('#globalHashRate').text(numeral(localData.networkHashRate).format('0,0') + ' H/s')
+        $('#globalHashRate').text(formatHashRate(localData.networkHashRate))
         setTimeout(function () {
           getCurrentNetworkHashRateLoop()
         }, 15000)

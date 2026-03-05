@@ -25,7 +25,7 @@ $(document).ready(function () {
         targets: [2],
         render: function (data, type, row, meta) {
           if (type === 'display') {
-            data = numeral(data).format('0,0') + ' H/s'
+            data = formatHashRate(data)
           }
           return data
         }

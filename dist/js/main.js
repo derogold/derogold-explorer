@@ -157,7 +157,7 @@ function getAndDisplayLastBlockHeader() {
       }
       $('#blockchainHeight').text(numeral(header.height).format('0,0'))
       $('#blockchainDifficulty').text(numeral(header.difficulty).format('0,0'))
-      $('#blockchainHashRate').text(numeral(header.difficulty / ExplorerConfig.blockTargetTime).format('0,0') + ' H/s')
+      $('#blockchainHashRate').text(formatHashRate(header.difficulty / ExplorerConfig.blockTargetTime))
       $('#blockchainReward').text(numeral(header.reward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
 
       /* Fetch full block details for supply and transaction count */
@@ -198,7 +198,7 @@ function getAndDisplayLastBlockHeader() {
         }
         $('#blockchainHeight').text(numeral(data.height).format('0,0'))
         $('#blockchainDifficulty').text(numeral(data.difficulty).format('0,0'))
-        $('#blockchainHashRate').text(numeral(data.difficulty / ExplorerConfig.blockTargetTime).format('0,0') + ' H/s')
+        $('#blockchainHashRate').text(formatHashRate(data.difficulty / ExplorerConfig.blockTargetTime))
         $('#blockchainReward').text(numeral(data.reward / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
         $('#blockchainTransactions').text(numeral(data.alreadyGeneratedTransactions).format('0,0'))
         $('#blockchainCirculatingSupply').text(numeral(data.alreadyGeneratedCoins / Math.pow(10, ExplorerConfig.decimalPoints)).format('0,0.00') + ' ' + ExplorerConfig.ticker)
